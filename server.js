@@ -1,6 +1,7 @@
 import express from "express";
 import fetch from "node-fetch";
-import cors from "cors";
+import cors from "cors";import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 app.use(express.json());
@@ -33,7 +34,7 @@ app.post("/api/analyze", async (req, res) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer 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",
+        Authorization: `Bearer ${process.env.HF_API_KEY}`,
       },
       body: JSON.stringify({ inputs: text }),
     });
