@@ -1,0 +1,16 @@
+{
+  "name": "fake-news-detector-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
+}
+

@@ -1,0 +1,70 @@
+// server.js
+import express from "express";
+import fetch from "node-fetch";
+import cors from "cors";
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// PUBLIC test model (no API key)
+// Sentiment model for testing - returns POSITIVE / NEGATIVE
+const MODEL_URL = "https://api-inference.huggingface.co/models/distilbert/distilbert-base-uncased-finetuned-sst-2-english";
+
+app.get("/", (req, res) => {
+  res.send("Backend alive - POST /api/analyze");
+});
+
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { text } = req.body;
+    console.log("Request received. text length:", text ? text.length : 0);
+
+    if (!text || text.trim() === "") {
+      console.log("No text provided");
+      return res.status(400).json({ error: "No text provided" });
+    }
+
+    // Call HF
+    const hfResp = await fetch(MODEL_URL, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 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"
+    },
+      body: JSON.stringify({ inputs: text }),
+    });
+
+    const status = hfResp.status;
+    const statusText = hfResp.statusText;
+    const raw = await hfResp.text(); // read raw text so we can log even if not JSON
+
+    console.log("HuggingFace status:", status, statusText);
+    console.log("HuggingFace raw response (first 1000 chars):", raw.slice(0, 1000));
+
+    // Try to parse JSON - if not JSON, return raw text for debugging
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      console.error("Hugging Face returned non-JSON:", err.message);
+      return res.status(502).json({
+        error: "Hugging Face returned non-JSON response",
+        hfStatus: status,
+        hfStatusText: statusText,
+        hfRaw: raw,
+      });
+    }
+
+    // Respond to frontend with parsed result
+    return res.json({ result: parsed, hfStatus: status });
+  } catch (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({ error: "Server error", message: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
+});
